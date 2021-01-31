@@ -1,17 +1,54 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <FetchButton :get-data="getData" title="Get data"/>
+    <Loading v-if="isLoading"/>
+    <div v-else>
+      <Table v-if="tableData.length" :data="tableData"/>
+      <div v-else>No data</div>
+    </div>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import { payload } from "@/mocData";
+import simulateAsyncReq from "@/plugins/getDataFunc";
+import { sortDataAsc } from "@/utils/helpers";
+import Table from "@/components/Table";
+import FetchButton from "@/components/FetchButton";
 
 export default {
   name: 'App',
-  components: {
-    HelloWorld
+  components: { FetchButton, Table },
+  data: () => ({
+    tableData: [],
+    isLoading: false,
+    headers: {
+      stocks: 'Stock',
+      current: 'Current',
+      change: 'Change'
+    }
+  }),
+  methods: {
+    async getData () {
+      this.tableData = [];
+      this.isLoading = true;
+      try {
+        this.refactorData(await simulateAsyncReq(payload));
+        this.isLoading = false;
+      } catch (e) {
+        this.isLoading = false;
+        console.error('Fetch failed...');
+      }
+    },
+    refactorData (response) {
+      const length = response.stocks.length;
+      const array = new Array(length).fill(null).map((el,i) => {
+        const { stocks, start, current } = response;
+        return ({ stocks: stocks[i], current: start[i], change: current[i] - start[i]})
+      });
+      this.tableData = sortDataAsc(array, 'stocks');
+      this.tableData.unshift(this.headers);
+    }
   }
 }
 </script>
@@ -22,7 +59,7 @@ export default {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  color: #000;
   margin-top: 60px;
 }
 </style>
