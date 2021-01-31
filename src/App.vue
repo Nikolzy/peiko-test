@@ -34,10 +34,10 @@ export default {
       this.isLoading = true;
       try {
         this.refactorData(await simulateAsyncReq(payload));
-        this.isLoading = false;
       } catch (e) {
-        this.isLoading = false;
         console.error('Fetch failed...');
+      } finally {
+        this.isLoading = false;
       }
     },
     refactorData (response) {
